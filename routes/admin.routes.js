@@ -13,11 +13,18 @@ const {
   getShopById,
   getAllShops,
   updateShopById,
-  deleteShopById
+  deleteShopById,
 } = require("../controllers/shop.controller");
 
 const { verifyToken } = require("../middleware/auth.middleware");
 const { isAdmin } = require("../middleware/role.middleware");
+const {
+  createLoan,
+  updateLoanById,
+  getLoanById,
+  getAllLoans,
+  deleteLoanById,
+} = require("../controllers/loan.controller");
 
 //agents management
 router.post("/create-agent", verifyToken, isAdmin, createAgent);
@@ -30,12 +37,14 @@ router.delete("/agent/:id", verifyToken, isAdmin, deleteAgentById);
 router.post("/create-shop", verifyToken, isAdmin, createShop);
 router.get("/shops", verifyToken, isAdmin, getAllShops);
 router.get("/shop/:id", verifyToken, isAdmin, getShopById);
-router.put("/shop/:id",verifyToken, isAdmin, updateShopById);
+router.put("/shop/:id", verifyToken, isAdmin, updateShopById);
 router.delete("/shop/:id", verifyToken, isAdmin, deleteShopById);
 
-
-
-
-
+//loan management
+router.post("/create-loan", verifyToken, isAdmin, createLoan);
+router.put("/loan/:id", verifyToken, isAdmin, updateLoanById);
+router.get("/loan/:id", verifyToken, isAdmin, getLoanById);
+router.get("/loans", verifyToken, isAdmin, getAllLoans);
+router.delete("/loan/:id", verifyToken, isAdmin, deleteLoanById);
 
 module.exports = router;

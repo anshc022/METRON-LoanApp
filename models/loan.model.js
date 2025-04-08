@@ -14,6 +14,10 @@ const Loan = sequelize.define('Loan', {
   due_date: {
     type: DataTypes.DATEONLY,
     allowNull: false
+  },
+  created_by :{
+    type: DataTypes.INTEGER,
+    allowNull: false
   }
 }, {
   tableName: 'shop_loans',

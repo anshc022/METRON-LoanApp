@@ -19,7 +19,7 @@ Collection.belongsTo(Loan, { foreignKey: 'loan_id' });
 
 User.hasMany(Collection, { foreignKey: 'collected_by' });
 Collection.belongsTo(User, { foreignKey: 'collected_by' });
-
+  
 Loan.hasMany(Reschedule, { foreignKey: 'loan_id' });
 Reschedule.belongsTo(Loan, { foreignKey: 'loan_id' });
 

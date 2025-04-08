@@ -25,6 +25,14 @@ const {
   getAllLoans,
   deleteLoanById,
 } = require("../controllers/loan.controller");
+const {
+  createCollection,
+  getCollectionById,
+  getAllCollections,
+  updateCollectionById,
+  deleteCollectionById,
+  getCollectionsByLoanId,
+} = require("../controllers/collection.controller");
 
 //agents management
 router.post("/create-agent", verifyToken, isAdmin, createAgent);
@@ -46,5 +54,15 @@ router.put("/loan/:id", verifyToken, isAdmin, updateLoanById);
 router.get("/loan/:id", verifyToken, isAdmin, getLoanById);
 router.get("/loans", verifyToken, isAdmin, getAllLoans);
 router.delete("/loan/:id", verifyToken, isAdmin, deleteLoanById);
+
+//collections management
+router.post("/create-collection", verifyToken, isAdmin, createCollection);
+router.get("/collection/:id", verifyToken, isAdmin, getCollectionById);
+router.get("/collections", verifyToken, isAdmin, getAllCollections);
+router.put("/collection/:id", verifyToken, isAdmin, updateCollectionById);
+router.delete("/collection/:id", verifyToken, isAdmin, deleteCollectionById);
+
+//advance collection apies
+router.get("/collection/loan/:id",verifyToken,isAdmin,getCollectionsByLoanId);
 
 module.exports = router;

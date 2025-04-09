@@ -35,6 +35,7 @@ const {
   getCollectionsByAgentId,
   getCollectionsByShopId,
 } = require("../controllers/collection.controller");
+const { createReschedule, getAllReschedules } = require("../controllers/reschedule.controller");
 
 //agents management
 router.post("/create-agent", verifyToken, isAdmin, createAgent);
@@ -72,4 +73,11 @@ router.delete("/collection/:id", verifyToken, isAdmin, deleteCollectionById);
 //advance collection apies
 router.get('/collections/by-agent/:id',verifyToken,isAdmin,getCollectionsByAgentId);
 
+
+
+
+
+// reschedule loan apies
+router.post("/create-reschedule", verifyToken, isAdmin, createReschedule);
+router.get("/reschedules", verifyToken, isAdmin, getAllReschedules);
 module.exports = router;

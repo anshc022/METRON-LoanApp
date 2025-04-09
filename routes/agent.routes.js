@@ -26,6 +26,8 @@ const {
    getCollectionsByShopId 
 } = require("../controllers/collection.controller");
 
+const { createReschedule, getAllReschedules } = require("../controllers/reschedule.controller");
+
 //shop management
 router.post("/create-shop", verifyToken, isAgent, createShop);
 router.get("/shop/:id", verifyToken, isAgent, getShopById);
@@ -52,7 +54,9 @@ router.get("/collections", verifyToken, isAgent, getAllCollections);
 router.put("/collection/:id", verifyToken, isAgent, updateCollectionById);
 router.delete("/collection/:id", verifyToken, isAgent, deleteCollectionById);
 
-//advance collection apies
-// router.get("/collections/loan/:id", verifyToken, isAgent, getCollectionsByLoanId);
+//reschedule loan apies
+router.post("/create-reschedule", verifyToken, isAgent, createReschedule);
+router.get("/reschedules", verifyToken, isAgent, getAllReschedules);
+
 
 module.exports = router;

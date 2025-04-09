@@ -26,6 +26,8 @@ Reschedule.belongsTo(Loan, { foreignKey: 'loan_id' });
 User.hasMany(Loan, { foreignKey: 'created_by' });
 User.hasMany(Reschedule, { foreignKey: 'rescheduled_by' });
 
+Reschedule.belongsTo(User, { foreignKey: 'rescheduled_by' });
+
 module.exports = {
   sequelize,
   User,

@@ -1,5 +1,5 @@
 const { User, Loan, Shop } = require("../models");
-const bcrypt = require("bcryptjs");
+
 
 //create loan to a shop amount,loan_date,due_date, shop id, created by
 exports.createLoan = async (req, res) => {

@@ -32,6 +32,8 @@ const {
   updateCollectionById,
   deleteCollectionById,
   getCollectionsByLoanId,
+  getCollectionsByAgentId,
+  getCollectionsByShopId,
 } = require("../controllers/collection.controller");
 
 //agents management
@@ -47,6 +49,8 @@ router.get("/shops", verifyToken, isAdmin, getAllShops);
 router.get("/shop/:id", verifyToken, isAdmin, getShopById);
 router.put("/shop/:id", verifyToken, isAdmin, updateShopById);
 router.delete("/shop/:id", verifyToken, isAdmin, deleteShopById);
+//get all collection of shop by id
+router.get("/shop/:id/collections", verifyToken, isAdmin, getCollectionsByShopId);
 
 //loan management
 router.post("/create-loan", verifyToken, isAdmin, createLoan);
@@ -54,6 +58,9 @@ router.put("/loan/:id", verifyToken, isAdmin, updateLoanById);
 router.get("/loan/:id", verifyToken, isAdmin, getLoanById);
 router.get("/loans", verifyToken, isAdmin, getAllLoans);
 router.delete("/loan/:id", verifyToken, isAdmin, deleteLoanById);
+
+// get collections of a loan
+router.get("/loan/:id/collections",verifyToken,isAdmin,getCollectionsByLoanId);
 
 //collections management
 router.post("/create-collection", verifyToken, isAdmin, createCollection);
@@ -63,6 +70,6 @@ router.put("/collection/:id", verifyToken, isAdmin, updateCollectionById);
 router.delete("/collection/:id", verifyToken, isAdmin, deleteCollectionById);
 
 //advance collection apies
-router.get("/collection/loan/:id",verifyToken,isAdmin,getCollectionsByLoanId);
+router.get('/collections/by-agent/:id',verifyToken,isAdmin,getCollectionsByAgentId);
 
 module.exports = router;

@@ -1,16 +1,1 @@
 .qodo
-
-#avoid package lock json
-
-#avoid yarn lock json
-package-lock.json
-yarn.lock
-#avoid node modules
-node_modules
-#avoid build
-dist
-#avoid coverage
-coverage
-#avoid env
-.env
-#avoid test

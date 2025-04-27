@@ -15,14 +15,14 @@ const Collection = sequelize.define('Collection', {
     type: DataTypes.ENUM('cash', 'upi', 'bank_transfer'),
     allowNull: false
   },
-  loan_id:{
+  loan_id: {
     type: DataTypes.INTEGER,
     allowNull: false
   },
   collected_by: {
     type: DataTypes.INTEGER,
     allowNull: false
-  },
+  }
 }, {
   tableName: 'loan_collections',
   timestamps: false

@@ -6,6 +6,10 @@ const {
   getAgentById,
   updateAgentById,
   deleteAgentById,
+  getReports, // Import the getReports method
+  getDailyReport,
+  getWeeklyReport,
+  getCustomReport,
 } = require("../controllers/admin.controller");
 
 const {
@@ -34,8 +38,21 @@ const {
   getCollectionsByLoanId,
   getCollectionsByAgentId,
   getCollectionsByShopId,
+  getCollectionsByDateRange,
 } = require("../controllers/collection.controller");
 const { createReschedule, getAllReschedules } = require("../controllers/reschedule.controller");
+const {
+  createDailyCollection,
+  getDailyCollectionById,
+  getAllDailyCollections,
+  updateDailyCollectionById,
+  deleteDailyCollectionById
+} = require("../controllers/dailyCollection.controller");
+const { getDashboardStats, getTodayCollections } = require("../controllers/dashboard.controller");
+
+// Dashboard routes
+router.get("/dashboard/stats", verifyToken, getDashboardStats);
+router.get("/dashboard/today-collections", verifyToken, getTodayCollections);
 
 //agents management
 router.post("/create-agent", verifyToken, isAdmin, createAgent);
@@ -72,12 +89,23 @@ router.delete("/collection/:id", verifyToken, isAdmin, deleteCollectionById);
 
 //advance collection apies
 router.get('/collections/by-agent/:id',verifyToken,isAdmin,getCollectionsByAgentId);
+router.get("/collections/by-date",verifyToken,isAdmin,getCollectionsByDateRange);
 
-
-
-
+// Daily collections management
+router.post("/create-daily-collection", verifyToken, isAdmin, createDailyCollection);
+router.get("/daily-collection/:id", verifyToken, isAdmin, getDailyCollectionById);
+router.get("/daily-collections", verifyToken, isAdmin, getAllDailyCollections);
+router.put("/daily-collection/:id", verifyToken, isAdmin, updateDailyCollectionById);
+router.delete("/daily-collection/:id", verifyToken, isAdmin, deleteDailyCollectionById);
 
 // reschedule loan apies
 router.post("/create-reschedule", verifyToken, isAdmin, createReschedule);
 router.get("/reschedules", verifyToken, isAdmin, getAllReschedules);
+
+// Reports route
+router.get("/reports", verifyToken, isAdmin, getReports); // Add route for fetching reports
+router.get("/reports/daily", verifyToken, isAdmin, getDailyReport);
+router.get("/reports/weekly", verifyToken, isAdmin, getWeeklyReport);
+router.get("/reports/custom", verifyToken, isAdmin, getCustomReport);
+
 module.exports = router;

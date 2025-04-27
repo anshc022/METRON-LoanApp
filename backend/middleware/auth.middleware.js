@@ -1,25 +1,34 @@
 // middleware/auth.middleware.js
-const jwt = require('jsonwebtoken');
-const { User } = require('../models');
+const { verifyToken } = require('../utils/token.util');
 
-exports.verifyToken = async (req, res, next) => {
-  const header = req.headers['authorization'];
-  const token = header && header.split(' ')[1];
+exports.verifyToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
 
-  if (!token) return res.status(401).json({ message: 'Token required' });
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findByPk(decoded.id);
-
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid user' });
-    }
-
-    req.user = user; 
-    next();
-  } catch (err) {
-    console.error('verifyToken error:', err);
-    res.status(401).json({ message: 'Invalid token' });
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      message: 'No token provided'
+    });
   }
+
+  const tokenValidation = verifyToken(token);
+
+  if (!tokenValidation.valid) {
+    if (tokenValidation.expired) {
+      return res.status(401).json({
+        success: false,
+        message: 'Token expired',
+        expired: true
+      });
+    }
+    return res.status(401).json({
+      success: false,
+      message: 'Invalid token'
+    });
+  }
+
+  // Set decoded user info in request
+  req.user = tokenValidation.decoded;
+  next();
 };

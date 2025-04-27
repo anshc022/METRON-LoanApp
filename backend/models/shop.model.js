@@ -11,7 +11,12 @@ const Shop = sequelize.define('Shop', {
     type: DataTypes.STRING(100)
   },
   location: {
-    type: DataTypes.STRING(100)
+    type: DataTypes.STRING(100),
+    allowNull: false
+  },
+  agent_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true
   }
 }, {
   tableName: 'shops',

@@ -1,270 +1,226 @@
-const { User, Loan, Shop } = require("../models");
+const { Loan, Shop, User } = require("../models");
 
-
-//create loan to a shop amount,loan_date,due_date, shop id, created by
-exports.createLoan = async (req, res) => {
+exports.getAllLoans = async (req, res) => {
   try {
-    const { amount, loan_date, due_date, shop_id } = req.body;
-    const user = req.user;
-
-    // Basic validation
-    if (!amount || !loan_date || !due_date || !shop_id) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid input. Please provide all required fields.",
+    let loans;
+    
+    if (req.user.role === 'admin') {
+      // Admin can see all loans
+      loans = await Loan.findAll({
+        include: [{
+          model: Shop,
+          attributes: ['name', 'owner_name']
+        }]
+      });
+    } else {
+      // Agent can only see loans for their assigned shops
+      loans = await Loan.findAll({
+        include: [{
+          model: Shop,
+          where: { agent_id: req.user.id },
+          attributes: ['name', 'owner_name']
+        }]
       });
     }
 
-    // Find the shop
+    res.status(200).json({
+      success: true,
+      data: loans.map(loan => ({
+        ...loan.toJSON(),
+        shop_name: loan.Shop?.name || null
+      }))
+    });
+  } catch (err) {
+    console.error("Error fetching loans:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+};
+
+exports.getLoanById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    let loan;
+
+    if (req.user.role === 'admin') {
+      // Admin can see any loan
+      loan = await Loan.findByPk(id, {
+        include: [{
+          model: Shop,
+          attributes: ['name', 'owner_name']
+        }]
+      });
+    } else {
+      // Agent can only see loans for their assigned shops
+      loan = await Loan.findOne({
+        where: { id },
+        include: [{
+          model: Shop,
+          where: { agent_id: req.user.id },
+          attributes: ['name', 'owner_name']
+        }]
+      });
+    }
+
+    if (!loan) {
+      return res.status(404).json({
+        success: false,
+        message: "Loan not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        ...loan.toJSON(),
+        shop_name: loan.Shop?.name || null
+      }
+    });
+  } catch (err) {
+    console.error("Error fetching loan:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+};
+
+exports.createLoan = async (req, res) => {
+  try {
+    const { amount, loan_date, due_date, shop_id } = req.body;
+
+    // Verify shop exists and agent has access
     const shop = await Shop.findByPk(shop_id);
     if (!shop) {
       return res.status(404).json({
         success: false,
-        message: "Shop not found",
+        message: "Shop not found"
       });
     }
 
-    // Agent can only create loan for their assigned shop
-    if (user.role === "agent" && shop.agent_id !== user.id) {
+    // If agent, verify shop is assigned to them
+    if (req.user.role === 'agent' && shop.agent_id !== req.user.id) {
       return res.status(403).json({
         success: false,
-        message:
-          "Unauthorise Access, Agents can only create loans for their own shops",
+        message: "Not authorized to create loan for this shop"
       });
     }
 
-    // Create the loan
-    const newLoan = await Loan.create({
+    const loan = await Loan.create({
       amount,
       loan_date,
       due_date,
       shop_id,
-      created_by: user.id, // Track who created the loan
+      status: 'pending'
     });
 
     res.status(201).json({
       success: true,
       message: "Loan created successfully",
-      loan: newLoan,
+      data: {
+        ...loan.toJSON(),
+        shop_name: shop.name
+      }
     });
-  } catch (error) {
-    console.error("Error in creating loan for an shop:", error);
+  } catch (err) {
+    console.error("Create loan error:", err);
     res.status(500).json({
       success: false,
-      message: "Server error",
+      message: "Server error"
     });
   }
 };
 
-//update a loan by id
-
 exports.updateLoanById = async (req, res) => {
   try {
-    const loanId = req.params.id;
-    const user = req.user;
-    const { amount, loan_date, due_date } = req.body;
+    const { id } = req.params;
+    const updates = req.body;
 
-    // Find the loan
-    const loan = await Loan.findByPk(loanId);
+    // Find the loan with shop information
+    let loan = await Loan.findOne({
+      where: { id },
+      include: [{
+        model: Shop,
+        attributes: ['name', 'owner_name', 'agent_id']
+      }]
+    });
+
     if (!loan) {
       return res.status(404).json({
         success: false,
-        message: "Loan not found",
+        message: "Loan not found"
       });
     }
 
-    // Fetch the related shop
-    const shop = await Shop.findByPk(loan.shop_id);
-    if (!shop) {
-      return res.status(404).json({
-        success: false,
-        message: "Associated shop not found",
-      });
-    }
-
-    // If agent, check if shop belongs to them
-    if (user.role === "agent" && shop.agent_id !== user.id) {
+    // Check authorization
+    if (req.user.role === 'agent' && loan.Shop.agent_id !== req.user.id) {
       return res.status(403).json({
         success: false,
-        message:
-          "Unauthorise Access!, Agents can only update loans for their own shops",
+        message: "Not authorized to update this loan"
       });
     }
 
-    // Update loan fields if provided
-    if (amount !== undefined) loan.amount = amount;
-    if (loan_date !== undefined) loan.loan_date = loan_date;
-    if (due_date !== undefined) loan.due_date = due_date;
-
-    await loan.save();
+    // Update the loan
+    await loan.update(updates);
 
     res.status(200).json({
       success: true,
       message: "Loan updated successfully",
-      loan,
+      data: {
+        ...loan.toJSON(),
+        shop_name: loan.Shop?.name || null
+      }
     });
-  } catch (error) {
-    console.error("Error updating loan:", error);
+  } catch (err) {
+    console.error("Update loan error:", err);
     res.status(500).json({
       success: false,
-      message: "Server error",
+      message: "Server error"
     });
   }
 };
 
-//get a loan by id
-exports.getLoanById = async (req, res) => {
+exports.deleteLoanById = async (req, res) => {
   try {
-    const loanId = req.params.id;
-    const user = req.user;
+    const { id } = req.params;
 
-    const loan = await Loan.findByPk(loanId, {
-      include: {
+    // Find the loan with shop information
+    const loan = await Loan.findOne({
+      where: { id },
+      include: [{
         model: Shop,
-        include: {
-          model: User,
-          attributes: ["id", "name", "email"],
-        },
-      },
+        attributes: ['agent_id']
+      }]
     });
 
     if (!loan) {
       return res.status(404).json({
         success: false,
-        message: "Loan not found",
+        message: "Loan not found"
       });
     }
 
-    // If agent, ensure the shop belongs to them
-    if (user.role === "agent" && loan.Shop.agent_id !== user.id) {
+    // Only admin can delete loans, agents cannot
+    if (req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
-        message:
-          "Access denied. You can only view loans of your assigned shops.",
+        message: "Not authorized to delete loans"
       });
     }
+
+    await loan.destroy();
 
     res.status(200).json({
       success: true,
-      message: "Loan fetched successfully",
-      loan: {
-        id: loan.id,
-        amount: loan.amount,
-        loan_date: loan.loan_date,
-        due_date: loan.due_date,
-        shop: {
-          id: loan.Shop.id,
-          name: loan.Shop.name,
-          location: loan.Shop.location,
-        },
-        agent: {
-          id: loan.Shop.User.id,
-          name: loan.Shop.User.name,
-          email: loan.Shop.User.email,
-        },
-      },
+      message: "Loan deleted successfully"
     });
-  } catch (error) {
-    console.error("Error fetching loan:", error);
+  } catch (err) {
+    console.error("Delete loan error:", err);
     res.status(500).json({
       success: false,
-      message: "Server error",
+      message: "Server error"
     });
   }
 };
-
-// get all loans
-exports.getAllLoans = async (req, res) => {
-  try {
-    const user = req.user;
-
-    let loanQuery = {
-      include: {
-        model: Shop,
-        include: {
-          model: User,
-          attributes: ["id", "name", "email"],
-        },
-      },
-      order: [["loan_date", "DESC"]],
-    };
-
-    // If agent, add filter to only get their shop loans
-    if (user.role === "agent") {
-      loanQuery.where = {};
-      loanQuery.include.where = { agent_id: user.id };
-    }
-
-    const loans = await Loan.findAll(loanQuery);
-
-    const formattedLoans = loans.map((loan) => ({
-      id: loan.id,
-      amount: loan.amount,
-      loan_date: loan.loan_date,
-      due_date: loan.due_date,
-      shop: {
-        id: loan.Shop.id,
-        name: loan.Shop.name,
-        location: loan.Shop.location,
-      },
-      agent: {
-        id: loan.Shop.User.id,
-        name: loan.Shop.User.name,
-        email: loan.Shop.User.email,
-      },
-    }));
-
-    res.status(200).json({
-      success: true,
-      message: "Loans fetched successfully",
-      count:formattedLoans.length,
-      loans: formattedLoans,
-
-    });
-  } catch (error) {
-    console.error("Error fetching loans:", error);
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
-  }
-};
-
-
-//delete a loan by id
-exports.deleteLoanById = async (req, res) => {
-    try {
-      const user = req.user;
-  
-      // Only admin can delete
-      if (user.role !== 'admin') {
-        return res.status(403).json({
-          success: false,
-          message: 'Unauthorise Access!, Agents cant delete loans.'
-        });
-      }
-  
-      const loanId = req.params.id;
-  
-      const loan = await Loan.findByPk(loanId);
-      if (!loan) {
-        return res.status(404).json({
-          success: false,
-          message: 'Loan not found'
-        });
-      }
-  
-      await loan.destroy();
-  
-      res.status(200).json({
-        success: true,
-        message: 'Loan deleted successfully'
-      });
-    } catch (error) {
-      console.error('Error deleting loan:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Server error'
-      });
-    }
-  };

@@ -1,0 +1,425 @@
+{
+  "apiVersion": "1.0.0",
+  "baseUrl": "/api",
+  "auth": {
+    "type": "Bearer Token",
+    "tokenLocation": "headers.authorization",
+    "format": "Bearer <token>"
+  },
+  "security": {
+    "rateLimiting": {
+      "general": "Applied to all /api routes",
+      "auth": "Stricter rate limiting for /api/auth routes",
+      "collection": "Specific rate limiting for collection creation endpoints"
+    },
+    "apiKey": "Required for third-party integration routes"
+  },
+  "endpoints": {
+    "auth": {
+      "prefix": "/auth",
+      "routes": {
+        "signup": {
+          "method": "POST",
+          "path": "/signup",
+          "description": "Register a new user (admin or agent)",
+          "body": {
+            "name": "string (required)",
+            "email": "string (required)",
+            "password": "string (required)",
+            "role": "enum['admin', 'agent'] (required)",
+            "location": "string (required for agents)"
+          },
+          "response": {
+            "201": {
+              "message": "User registered successfully",
+              "user": {
+                "id": "number",
+                "name": "string",
+                "email": "string",
+                "role": "string",
+                "location": "string"
+              }
+            }
+          }
+        },
+        "login": {
+          "method": "POST",
+          "path": "/login",
+          "description": "Login user and get authentication token",
+          "body": {
+            "email": "string (required)",
+            "password": "string (required)"
+          },
+          "response": {
+            "200": {
+              "message": "Login successful",
+              "token": "string (JWT token)"
+            }
+          }
+        }
+      }
+    },
+    "admin": {
+      "prefix": "/admin",
+      "security": "Requires admin role and valid JWT token",
+      "routes": {
+        "agents": {
+          "createAgent": {
+            "method": "POST",
+            "path": "/create-agent",
+            "description": "Create a new agent (Admin only)",
+            "body": {
+              "name": "string (required)",
+              "email": "string (required)",
+              "password": "string (required)",
+              "role": "agent",
+              "location": "string (required)"
+            }
+          },
+          "getAllAgents": {
+            "method": "GET",
+            "path": "/agents",
+            "description": "Get list of all agents"
+          },
+          "getAgentById": {
+            "method": "GET",
+            "path": "/agent/:id",
+            "description": "Get agent details by ID"
+          },
+          "updateAgent": {
+            "method": "PUT",
+            "path": "/agent/:id",
+            "description": "Update agent details",
+            "body": {
+              "name": "string (optional)",
+              "email": "string (optional)",
+              "location": "string (optional)"
+            }
+          },
+          "deleteAgent": {
+            "method": "DELETE",
+            "path": "/agent/:id",
+            "description": "Delete an agent"
+          }
+        },
+        "shops": {
+          "createShop": {
+            "method": "POST",
+            "path": "/create-shop",
+            "description": "Create a new shop",
+            "body": {
+              "name": "string (required)",
+              "owner_name": "string",
+              "location": "string (required)",
+              "agent_id": "number (optional)"
+            }
+          },
+          "getAllShops": {
+            "method": "GET",
+            "path": "/shops",
+            "description": "Get all shops"
+          },
+          "getShopById": {
+            "method": "GET",
+            "path": "/shop/:id",
+            "description": "Get shop details by ID"
+          },
+          "updateShop": {
+            "method": "PUT",
+            "path": "/shop/:id",
+            "description": "Update shop details",
+            "body": {
+              "name": "string (optional)",
+              "owner_name": "string (optional)",
+              "location": "string (optional)"
+            }
+          },
+          "deleteShop": {
+            "method": "DELETE",
+            "path": "/shop/:id",
+            "description": "Delete a shop"
+          },
+          "getShopCollections": {
+            "method": "GET",
+            "path": "/shop/:id/collections",
+            "description": "Get all collections for a shop"
+          }
+        },
+        "loans": {
+          "createLoan": {
+            "method": "POST",
+            "path": "/create-loan",
+            "description": "Create a new loan",
+            "body": {
+              "amount": "number (required)",
+              "loan_date": "date (required)",
+              "due_date": "date (required)",
+              "shop_id": "number (required)"
+            }
+          },
+          "getAllLoans": {
+            "method": "GET",
+            "path": "/loans",
+            "description": "Get all loans"
+          },
+          "getLoanById": {
+            "method": "GET",
+            "path": "/loan/:id",
+            "description": "Get loan details by ID"
+          },
+          "updateLoan": {
+            "method": "PUT",
+            "path": "/loan/:id",
+            "description": "Update loan details",
+            "body": {
+              "amount": "number (optional)",
+              "loan_date": "date (optional)",
+              "due_date": "date (optional)"
+            }
+          },
+          "deleteLoan": {
+            "method": "DELETE",
+            "path": "/loan/:id",
+            "description": "Delete a loan"
+          },
+          "getLoanCollections": {
+            "method": "GET",
+            "path": "/loan/:id/collections",
+            "description": "Get all collections for a loan"
+          }
+        },
+        "collections": {
+          "createCollection": {
+            "method": "POST",
+            "path": "/create-collection",
+            "description": "Create a new collection",
+            "body": {
+              "loan_id": "number (required)",
+              "amount_collected": "number (required)",
+              "payment_mode": "enum['cash', 'upi', 'bank_transfer'] (required)",
+              "collection_date": "date (required)"
+            }
+          },
+          "getAllCollections": {
+            "method": "GET",
+            "path": "/collections",
+            "description": "Get all collections"
+          },
+          "getCollectionById": {
+            "method": "GET",
+            "path": "/collection/:id",
+            "description": "Get collection details by ID"
+          },
+          "updateCollection": {
+            "method": "PUT",
+            "path": "/collection/:id",
+            "description": "Update collection details",
+            "body": {
+              "amount_collected": "number (optional)",
+              "payment_mode": "enum['cash', 'upi', 'bank_transfer'] (optional)",
+              "collection_date": "date (optional)"
+            }
+          },
+          "deleteCollection": {
+            "method": "DELETE",
+            "path": "/collection/:id",
+            "description": "Delete a collection"
+          },
+          "getCollectionsByAgent": {
+            "method": "GET",
+            "path": "/collections/by-agent/:id",
+            "description": "Get all collections by agent ID"
+          }
+        },
+        "dailyCollections": {
+          "createDailyCollection": {
+            "method": "POST",
+            "path": "/create-daily-collection",
+            "description": "Create a new daily collection",
+            "body": {
+              "date": "date (required)",
+              "collections": "array of collection IDs (required)"
+            }
+          },
+          "getAllDailyCollections": {
+            "method": "GET",
+            "path": "/daily-collections",
+            "description": "Get all daily collections"
+          },
+          "getDailyCollectionById": {
+            "method": "GET",
+            "path": "/daily-collection/:id",
+            "description": "Get daily collection by ID"
+          },
+          "updateDailyCollection": {
+            "method": "PUT",
+            "path": "/daily-collection/:id",
+            "description": "Update daily collection",
+            "body": {
+              "date": "date (optional)",
+              "collections": "array of collection IDs (optional)"
+            }
+          },
+          "deleteDailyCollection": {
+            "method": "DELETE",
+            "path": "/daily-collection/:id",
+            "description": "Delete a daily collection"
+          }
+        },
+        "reschedule": {
+          "createReschedule": {
+            "method": "POST",
+            "path": "/create-reschedule",
+            "description": "Reschedule a loan",
+            "body": {
+              "loan_id": "number (required)",
+              "new_due_date": "date (required)",
+              "reason": "string (required)"
+            }
+          },
+          "getAllReschedules": {
+            "method": "GET",
+            "path": "/reschedules",
+            "description": "Get all loan reschedules"
+          }
+        }
+      }
+    },
+    "agent": {
+      "prefix": "/agent",
+      "security": "Requires agent role and valid JWT token",
+      "routes": {
+        "shops": {
+          "createShop": {
+            "method": "POST",
+            "path": "/create-shop",
+            "description": "Create a new shop (only in agent's location)",
+            "body": {
+              "name": "string (required)",
+              "owner_name": "string",
+              "location": "string (required, must match agent's location)"
+            }
+          },
+          "getShops": {
+            "method": "GET",
+            "path": "/shops",
+            "description": "Get all shops assigned to the agent"
+          },
+          "getShopById": {
+            "method": "GET",
+            "path": "/shop/:id",
+            "description": "Get shop details (only if assigned to agent)"
+          },
+          "updateShop": {
+            "method": "PUT",
+            "path": "/shop/:id",
+            "description": "Update shop details (only if assigned to agent)",
+            "body": {
+              "name": "string (optional)",
+              "owner_name": "string (optional)",
+              "location": "string (optional)"
+            }
+          },
+          "getShopCollections": {
+            "method": "GET",
+            "path": "/shop/:id/collections",
+            "description": "Get all collections for a shop (only if assigned to agent)"
+          }
+        },
+        "loans": {
+          "createLoan": {
+            "method": "POST",
+            "path": "/create-loan",
+            "description": "Create a new loan (only for assigned shops)",
+            "body": {
+              "amount": "number (required)",
+              "loan_date": "date (required)",
+              "due_date": "date (required)",
+              "shop_id": "number (required)"
+            }
+          },
+          "getLoans": {
+            "method": "GET",
+            "path": "/loans",
+            "description": "Get all loans for assigned shops"
+          },
+          "getLoanById": {
+            "method": "GET",
+            "path": "/loan/:id",
+            "description": "Get loan details (only if shop is assigned to agent)"
+          },
+          "updateLoan": {
+            "method": "PUT",
+            "path": "/loan/:id",
+            "description": "Update loan details (only if shop is assigned to agent)",
+            "body": {
+              "amount": "number (optional)",
+              "loan_date": "date (optional)",
+              "due_date": "date (optional)"
+            }
+          },
+          "getLoanCollections": {
+            "method": "GET",
+            "path": "/loan/:id/collections",
+            "description": "Get all collections for a loan"
+          }
+        },
+        "collections": {
+          "createCollection": {
+            "method": "POST",
+            "path": "/create-collection",
+            "description": "Create a new collection (only for assigned shops)",
+            "body": {
+              "loan_id": "number (required)",
+              "amount_collected": "number (required)",
+              "payment_mode": "enum['cash', 'upi', 'bank_transfer'] (required)",
+              "collection_date": "date (required)"
+            }
+          },
+          "getCollections": {
+            "method": "GET",
+            "path": "/collections",
+            "description": "Get all collections for assigned shops"
+          },
+          "getCollectionById": {
+            "method": "GET",
+            "path": "/collection/:id",
+            "description": "Get collection details by ID (only for assigned shops)"
+          },
+          "updateCollection": {
+            "method": "PUT",
+            "path": "/collection/:id",
+            "description": "Update collection details (only for assigned shops)",
+            "body": {
+              "amount_collected": "number (optional)",
+              "payment_mode": "enum['cash', 'upi', 'bank_transfer'] (optional)",
+              "collection_date": "date (optional)"
+            }
+          },
+          "deleteCollection": {
+            "method": "DELETE",
+            "path": "/collection/:id",
+            "description": "Delete a collection (only for assigned shops)"
+          }
+        },
+        "reschedule": {
+          "createReschedule": {
+            "method": "POST",
+            "path": "/create-reschedule",
+            "description": "Reschedule a loan (only for assigned shops)",
+            "body": {
+              "loan_id": "number (required)",
+              "new_due_date": "date (required)",
+              "reason": "string (required)"
+            }
+          },
+          "getReschedules": {
+            "method": "GET",
+            "path": "/reschedules",
+            "description": "Get all loan reschedules for assigned shops"
+          }
+        }
+      }
+    }
+  }
+}

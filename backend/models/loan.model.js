@@ -15,8 +15,17 @@ const Loan = sequelize.define('Loan', {
     type: DataTypes.DATEONLY,
     allowNull: false
   },
-  created_by :{
+  shop_id: {
     type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  created_by: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  status: {
+    type: DataTypes.ENUM('active', 'completed', 'defaulted'),
+    defaultValue: 'active',
     allowNull: false
   }
 }, {

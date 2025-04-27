@@ -27,6 +27,11 @@ const {
 } = require("../controllers/collection.controller");
 
 const { createReschedule, getAllReschedules } = require("../controllers/reschedule.controller");
+const { getDashboardStats, getTodayCollections } = require("../controllers/agent.controller");
+
+// Dashboard routes
+router.get("/dashboard/stats", verifyToken, getDashboardStats);
+router.get("/dashboard/today-collections", verifyToken, getTodayCollections);
 
 //shop management
 router.post("/create-shop", verifyToken, isAgent, createShop);
@@ -46,7 +51,6 @@ router.get("/loans", verifyToken, isAgent, getAllLoans);
 // get collcections of a loan
 router.get("/loan/:id/collections",verifyToken,isAgent,getCollectionsByLoanId);
 
-
 //Collection management
 router.post("/create-collection", verifyToken, isAgent, createCollection);
 router.get("/collection/:id", verifyToken, isAgent, getCollectionById);
@@ -57,6 +61,5 @@ router.delete("/collection/:id", verifyToken, isAgent, deleteCollectionById);
 //reschedule loan apies
 router.post("/create-reschedule", verifyToken, isAgent, createReschedule);
 router.get("/reschedules", verifyToken, isAgent, getAllReschedules);
-
 
 module.exports = router;

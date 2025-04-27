@@ -3,6 +3,10 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
 const Reschedule = sequelize.define('Reschedule', {
+  loan_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
   old_due_date: {
     type: DataTypes.DATEONLY,
     allowNull: false
@@ -11,16 +15,19 @@ const Reschedule = sequelize.define('Reschedule', {
     type: DataTypes.DATEONLY,
     allowNull: false
   },
-  reschedule_date: {
-    type: DataTypes.DATEONLY,
-    defaultValue: DataTypes.NOW
-  },
   reason: {
-    type: DataTypes.TEXT
+    type: DataTypes.TEXT,
+    allowNull: false
+  },
+  rescheduled_by: {
+    type: DataTypes.INTEGER,
+    allowNull: false
   }
 }, {
   tableName: 'loan_reschedules',
-  timestamps: false
+  timestamps: true,
+  createdAt: 'reschedule_date',
+  updatedAt: false
 });
 
 module.exports = Reschedule;

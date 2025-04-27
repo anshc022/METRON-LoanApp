@@ -1,5 +1,6 @@
 const { Collection, Loan, Shop, User } = require("../models");
 const { Op } = require("sequelize");
+
 exports.createCollection = async (req, res) => {
   try {
     const { loan_id, amount_collected, payment_mode, collection_date } =
@@ -377,40 +378,43 @@ exports.getCollectionsByAgentId = async (req, res) => {
   }
 };
 
-
 // get all collection of a shop by shop id
 exports.getCollectionsByShopId = async (req, res) => {
   try {
     const shopId = req.params.id;
     const user = req.user;
 
-    const shop = await Shop.findByPk(shopId);
+    // Verify the shop exists
+    const shop = await Shop.findByPk(shopId, {
+      attributes: ['id', 'name', 'location', 'owner_name', 'agent_id']
+    });
 
     if (!shop) {
       return res.status(404).json({ message: 'Shop not found' });
     }
 
-    // Restrict agent access to only their own shop
+    // Restrict access for agents to their own shops
     if (user.role === 'agent' && shop.agent_id !== user.id) {
       return res.status(403).json({ message: 'Unauthorized to view this shop\'s collections' });
     }
 
-  
-    // Get all loan IDs for the shop
-    const loans = await Loan.findAll({
-      where: { shop_id: shopId },
-      attributes: ['id']
-    });
-
-    const loanIds = loans.map(loan => loan.id);
-
-    // Fetch collections and include collector (User)
+    // Fetch collections for loans associated with the shop
     const collections = await Collection.findAll({
-      where: { loan_id: loanIds },
-      include: [{
-        model: User,
-        attributes: ['id', 'name', 'email']
-      }],
+      where: {
+        '$Loan.shop_id$': shopId
+      },
+      attributes: ['id', 'collection_date', 'amount_collected', 'payment_mode', 'loan_id'],
+      include: [
+        {
+          model: Loan,
+          attributes: [], // Avoid fetching Loan attributes to simplify the query
+        },
+        {
+          model: User,
+          attributes: ['id', 'name', 'email'],
+          as: 'User'
+        }
+      ],
       order: [['collection_date', 'DESC']]
     });
 
@@ -421,11 +425,11 @@ exports.getCollectionsByShopId = async (req, res) => {
       amount_collected: col.amount_collected,
       payment_mode: col.payment_mode,
       loan_id: col.loan_id,
-      collected_by: {
-        id: col.User?.id,
-        name: col.User?.name,
-        email: col.User?.email
-      }
+      collected_by: col.User ? {
+        id: col.User.id,
+        name: col.User.name,
+        email: col.User.email
+      } : null
     }));
 
     res.status(200).json({
@@ -434,7 +438,7 @@ exports.getCollectionsByShopId = async (req, res) => {
         id: shop.id,
         name: shop.name,
         location: shop.location,
-        owner_name: shop.owner_name,
+        owner_name: shop.owner_name
       },
       collection_count: formattedCollections.length,
       collections: formattedCollections
@@ -443,6 +447,69 @@ exports.getCollectionsByShopId = async (req, res) => {
   } catch (error) {
     console.error('Error fetching shop collections:', error);
     res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// get collections by date range
+exports.getCollectionsByDateRange = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        success: false,
+        message: "Start date and end date are required"
+      });
+    }
+
+    // Fetch collections within the date range
+    const collections = await Collection.findAll({
+      where: {
+        collection_date: {
+          [Op.between]: [startDate, endDate]
+        }
+      },
+      include: [
+        {
+          model: Loan,
+          include: {
+            model: Shop,
+            attributes: ["id", "name", "location", "agent_id"],
+          },
+        },
+        {
+          model: User,
+          attributes: ["id", "name", "email"],
+          as: "User",
+        },
+      ],
+      order: [["collection_date", "DESC"]],
+    });
+
+    // Format the response
+    const formattedCollections = collections.map(collection => ({
+      id: collection.id,
+      collection_date: collection.collection_date,
+      amount_collected: collection.amount_collected,
+      payment_mode: collection.payment_mode,
+      status: Number(collection.amount_collected) >= Number(collection.Loan.amount) ? 'completed' : 'pending',
+      agent_id: collection.collected_by,
+      agent_name: collection.User?.name,
+      shop_id: collection.Loan.Shop.id,
+      shop_name: collection.Loan.Shop.name,
+      loan_id: collection.loan_id
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: formattedCollections
+    });
+  } catch (error) {
+    console.error("Error fetching collections by date range:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
   }
 };
 

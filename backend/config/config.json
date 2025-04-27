@@ -1,0 +1,32 @@
+{
+  "development": {
+    "url": "postgres://postgres:Pranshu@1477@db.rvgndtxlezqqajqqzmuz.supabase.co:5432/postgres",
+    "dialect": "postgres",
+    "dialectOptions": {
+      "ssl": {
+        "require": true,
+        "rejectUnauthorized": false
+      }
+    }
+  },
+  "test": {
+    "url": "postgres://postgres:Pranshu@1477@db.rvgndtxlezqqajqqzmuz.supabase.co:5432/postgres",
+    "dialect": "postgres",
+    "dialectOptions": {
+      "ssl": {
+        "require": true,
+        "rejectUnauthorized": false
+      }
+    }
+  },
+  "production": {
+    "url": "postgres://postgres:Pranshu@1477@db.rvgndtxlezqqajqqzmuz.supabase.co:5432/postgres",
+    "dialect": "postgres",
+    "dialectOptions": {
+      "ssl": {
+        "require": true,
+        "rejectUnauthorized": false
+      }
+    }
+  }
+}

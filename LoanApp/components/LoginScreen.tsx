@@ -14,12 +14,15 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { authService, LoginCredentials } from '../services/authService';
+import WithNetworkCheck from './shared/WithNetworkCheck';
+import { useNetworkStatus } from '../hooks/useNetworkStatus';
 
 interface LoginScreenProps {
   onLoginSuccess: (userRole: 'admin' | 'agent') => void;
 }
 
 const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
+  const { isOffline } = useNetworkStatus();
   const [credentials, setCredentials] = useState<LoginCredentials>({
     email: '',
     password: '',
@@ -33,6 +36,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
+    if (isOffline) {
+      Alert.alert('No Internet Connection', 'Please check your internet connection and try again.');
+      return;
+    }
+
     if (!credentials.email.trim()) {
       Alert.alert('Error', 'Please enter your email address');
       return;
@@ -169,14 +177,19 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
             <TouchableOpacity
               style={[
                 styles.loginButton,
-                (!selectedRole || loading) && styles.loginButtonDisabled,
+                (!selectedRole || loading || isOffline) && styles.loginButtonDisabled,
               ]}
               onPress={handleLogin}
-              disabled={!selectedRole || loading}
+              disabled={!selectedRole || loading || isOffline}
               activeOpacity={0.8}
             >
               {loading ? (
                 <ActivityIndicator size="small" color="#ffffff" />
+              ) : isOffline ? (
+                <>
+                  <Ionicons name="wifi-outline" size={20} color="#ffffff" />
+                  <Text style={styles.loginButtonText}>No Internet Connection</Text>
+                </>
               ) : (
                 <>
                   <Text style={styles.loginButtonText}>

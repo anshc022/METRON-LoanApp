@@ -1,21 +1,51 @@
 import React, { useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, ActivityIndicator, StyleSheet, Alert, AppState } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import LoginScreen from './components/LoginScreen';
 import AgentDashboard from './components/AgentDashboard';
 import AdminDashboard from './components/AdminDashboard';
 import { authService } from './services/authService';
 import { ToastProvider } from './components/shared/Toast';
+import ErrorBoundary from './components/ErrorBoundary';
+import NetworkStatus from './components/shared/NetworkStatus';
+import { UpdateBanner } from './components/shared/UpdateBanner';
 
-type AppState = 'loading' | 'login' | 'agent' | 'admin';
+type AppComponentState = 'loading' | 'login' | 'agent' | 'admin';
 
 export default function App() {
-  const [appState, setAppState] = useState<AppState>('loading');
+  const [appState, setAppState] = useState<AppComponentState>('loading');
 
   useEffect(() => {
-    checkAuthStatus();
-  }, []);
+    // Add app state change listener
+    const handleAppStateChange = (nextAppState: string) => {
+      if (nextAppState === 'active') {
+        // App has come to the foreground
+        console.log('App has come to the foreground!');
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    
+    // Initial auth check with timeout + watchdog to avoid indefinite blank screen
+    const start = Date.now();
+    const authCheckTimeout = setTimeout(() => {
+      checkAuthStatus();
+    }, 50);
+
+    const watchdog = setTimeout(() => {
+      if (appState === 'loading') {
+        console.warn('Startup watchdog triggered, falling back to login.');
+        setAppState('login');
+      }
+    }, 6000);
+
+    return () => {
+      subscription?.remove();
+      clearTimeout(authCheckTimeout);
+      clearTimeout(watchdog);
+    };
+  }, [appState]);
 
   const checkAuthStatus = async () => {
     try {
@@ -35,16 +65,27 @@ export default function App() {
       }
     } catch (error) {
       console.error('Auth check error:', error);
+      // Don't show alert on startup, just go to login
       setAppState('login');
     }
   };
 
   const handleLoginSuccess = (userRole: 'admin' | 'agent') => {
-    setAppState(userRole);
+    try {
+      setAppState(userRole);
+    } catch (error) {
+      console.error('Login success error:', error);
+      setAppState('login');
+    }
   };
 
   const handleLogout = () => {
-    setAppState('login');
+    try {
+      setAppState('login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      setAppState('login');
+    }
   };
 
   const renderContent = () => {
@@ -67,14 +108,18 @@ export default function App() {
   };
 
   return (
-    <SafeAreaProvider>
-      <ToastProvider>
-        <View style={styles.container}>
-          {renderContent()}
-          <StatusBar style="auto" />
-        </View>
-      </ToastProvider>
-    </SafeAreaProvider>
+    <ErrorBoundary>
+      <SafeAreaProvider>
+        <ToastProvider>
+          <View style={styles.container}>
+            <NetworkStatus showOnlineMessage={true} />
+            <UpdateBanner />
+            {renderContent()}
+            <StatusBar style="auto" />
+          </View>
+        </ToastProvider>
+      </SafeAreaProvider>
+    </ErrorBoundary>
   );
 }
 

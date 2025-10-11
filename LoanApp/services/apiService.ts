@@ -2,7 +2,8 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authService } from './authService';
 
-const API_BASE_URL = 'http://192.168.31.36:5000';
+const API_BASE_URL = 'https://api-loan-muv1.onrender.com';
+const REQUEST_TIMEOUT_MS = 12000;
 
 export interface Location {
   id: number;
@@ -134,7 +135,12 @@ class ApiService {
     const token = authService.getToken();
     console.log('API Service - Token:', token ? 'Present' : 'Missing');
     if (!token) {
-      throw new Error('No authentication token available');
+      // Return headers without auth to avoid throwing synchronously on UI threads
+      return {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      };
     }
     return {
       headers: {
@@ -145,46 +151,32 @@ class ApiService {
     };
   }
 
+  private async safeGet<T>(url: string) : Promise<T> {
+    const config = { ...this.getAuthHeaders(), timeout: REQUEST_TIMEOUT_MS } as any;
+    const resp = await axios.get(url, config);
+    return resp.data?.data ?? resp.data;
+  }
+
   // Agent APIs
   async getAgentStats(): Promise<AgentStats> {
-    const response = await axios.get(
-      `${API_BASE_URL}/api/agent/dashboard/stats`,
-      this.getAuthHeaders()
-    );
-    return response.data.data;
+    return await this.safeGet<AgentStats>(`${API_BASE_URL}/api/agent/dashboard/stats`);
   }
 
   async getAgentShops(): Promise<Shop[]> {
-    const response = await axios.get(
-      `${API_BASE_URL}/api/agent/shops`,
-      this.getAuthHeaders()
-    );
-    return response.data.data;
+    return await this.safeGet<Shop[]>(`${API_BASE_URL}/api/agent/shops`);
   }
 
   async getAgentLoans(): Promise<Loan[]> {
-    const response = await axios.get(
-      `${API_BASE_URL}/api/agent/loans`,
-      this.getAuthHeaders()
-    );
-    return response.data.data;
+    return await this.safeGet<Loan[]>(`${API_BASE_URL}/api/agent/loans`);
   }
 
   // Admin APIs
   async getAdminStats(): Promise<AdminStats> {
-    const response = await axios.get(
-      `${API_BASE_URL}/api/admin/dashboard/stats`,
-      this.getAuthHeaders()
-    );
-    return response.data.data;
+    return await this.safeGet<AdminStats>(`${API_BASE_URL}/api/admin/dashboard/stats`);
   }
 
   async getAllAgents(): Promise<Agent[]> {
-    const response = await axios.get(
-      `${API_BASE_URL}/api/admin/agents`,
-      this.getAuthHeaders()
-    );
-    const agents = response.data.data as any[];
+    const agents = await this.safeGet<any[]>(`${API_BASE_URL}/api/admin/agents`);
     // Map backend shape (isActive boolean) to UI-friendly status
     return agents.map((a) => ({
       id: a.id,

@@ -1,30 +1,49 @@
 {
   "expo": {
-    "name": "LoanApp",
-    "slug": "LoanApp",
+    "name": "METRON Loan Management",
+    "slug": "metron-loan-management",
+    "scheme": "metron-loan-management",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/mainlogo.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.metron.loanmanagement"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/mainlogo.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "edgeToEdgeEnabled": false,
+      "predictiveBackGestureEnabled": false,
+      "package": "com.metron.loanmanagement",
+      "versionCode": 4,
+      "permissions": [
+        "INTERNET",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ],
+      "allowBackup": false,
+      "softwareKeyboardLayoutMode": "pan",
+      "jsEngine": "hermes"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/mainlogo.png"
+    },
+    "owner": "rishukr007",
+    "extra": {
+      "eas": {
+        "projectId": "975b5a61-4ae1-4393-a08e-3b308c91dcda"
+      }
     }
   }
 }

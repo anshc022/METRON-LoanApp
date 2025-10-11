@@ -16,7 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { apiService, Shop } from '../../services/apiService';
 
-const API_BASE_URL = 'http://192.168.31.36:5000';
+const API_BASE_URL = 'https://api-loan-muv1.onrender.com';
 
 // Helper to convert relative paths to absolute URLs
 const getFullImageUrl = (path: string | null | undefined): string => {

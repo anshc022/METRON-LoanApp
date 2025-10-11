@@ -1,7 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
-const API_BASE_URL = 'http://192.168.31.36:5000';
+const API_BASE_URL = 'https://api-loan-muv1.onrender.com';
+const REQUEST_TIMEOUT_MS = 10000; // default request timeout (10s)
 const TOKEN_KEY = 'authToken';
 const USER_KEY = 'userData';
 
@@ -22,9 +23,21 @@ class AuthService {
   private token: string | null = null;
   private user: User | null = null;
 
+  constructor() {
+    // Apply a sane default timeout for all axios requests so the app doesn't hang
+    axios.defaults.timeout = REQUEST_TIMEOUT_MS;
+    axios.defaults.headers.common['Content-Type'] = 'application/json';
+  }
+
   async login(credentials: LoginCredentials): Promise<{ success: boolean; user?: User; error?: string }> {
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, credentials);
+      console.log('Attempting login to:', API_BASE_URL);
+      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, credentials, {
+        timeout: 30000, // 30 second timeout
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
       
       if (response.data.success) {
         this.token = response.data.token;
@@ -52,9 +65,21 @@ class AuthService {
       }
     } catch (error: any) {
       console.error('Login error:', error);
+      let errorMessage = 'Network error occurred';
+      
+      if (error.code === 'NETWORK_ERROR' || error.message?.includes('Network Error')) {
+        errorMessage = 'Unable to connect to server. Please check your internet connection.';
+      } else if (error.response?.status === 404) {
+        errorMessage = 'Server not found. Please try again later.';
+      } else if (error.response?.status >= 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
       return { 
         success: false, 
-        error: error.response?.data?.message || 'Network error occurred' 
+        error: errorMessage
       };
     }
   }
@@ -106,14 +131,35 @@ class AuthService {
   async verifyToken(): Promise<boolean> {
     try {
       if (!this.token) return false;
-      
-      const response = await axios.get(`${API_BASE_URL}/api/auth/verify`);
-      return response.data.success;
-    } catch (error) {
-      console.error('Token verification failed:', error);
-      await this.logout(); // Clear invalid token
+      const response = await axios.get(`${API_BASE_URL}/api/auth/verify`, {
+        timeout: 8000, // be stricter on verification so we don't block startup
+      });
+      return !!response.data?.success;
+    } catch (error: any) {
+      // If it's an auth error, clear token; otherwise, don't block startup
+      const status = error?.response?.status;
+      const isTimeout = error?.code === 'ECONNABORTED' || /timeout/i.test(String(error?.message));
+      const isNetwork = /Network Error/i.test(String(error?.message));
+      if (status === 401 || status === 403) {
+        console.warn('Token invalid, logging out.');
+        await this.logout();
+        return false;
+      }
+      if (isTimeout || isNetwork) {
+        console.warn('Token verification skipped due to network/timeout. Proceeding optimistically.');
+        return true; // be optimistic on transient network issues
+      }
+      console.error('Token verification failed (other):', error);
       return false;
     }
+  }
+
+  private withTimeout<T>(promise: Promise<T>, ms: number, onTimeoutValue: T): Promise<T> {
+    let timer: NodeJS.Timeout;
+    const timeout = new Promise<T>((resolve) => {
+      timer = setTimeout(() => resolve(onTimeoutValue), ms);
+    });
+    return Promise.race([promise.finally(() => clearTimeout(timer)), timeout]);
   }
 
   isAuthenticated(): boolean {

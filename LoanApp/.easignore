@@ -1,0 +1,42 @@
+# Files and folders that should be excluded from the EAS build upload archive.
+# EAS will re-install dependencies and regenerate build artifacts on the build server.
+
+# Dependency directories
+node_modules
+**/Pods
+
+# Android build outputs and caches
+android/.gradle
+android/.idea
+android/app/build
+android/build
+android/.cxx
+android/local.properties
+
+# iOS build outputs (in case prebuild is used later)
+ios/build
+ios/DerivedData
+.DS_Store
+
+# Expo local state and bundler caches
+.expo
+.expo-shared
+web-build
+build
+
+# Logs, coverage, and misc
+**/*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+**/coverage
+
+# IDE and tooling metadata
+.vscode
+.idea
+*.iml
+
+# Test and temp artifacts
+*.tmp
+*.temp
+**/.cache

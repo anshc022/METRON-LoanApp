@@ -9,8 +9,8 @@ interface AppVersion {
 
 // GitHub Releases configuration
 // Change these to the repo where you publish APK releases
-const GITHUB_OWNER = 'anshc022';
-const GITHUB_REPO = 'frt-loan';
+const GITHUB_OWNER = 'nycanshu';
+const GITHUB_REPO = 'loan';
 // If you hit rate limits in production, consider hosting a lightweight proxy endpoint
 // that calls GitHub with a token and returns just the needed fields.
 

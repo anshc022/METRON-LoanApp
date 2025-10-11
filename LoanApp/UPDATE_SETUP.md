@@ -13,8 +13,8 @@ The app now checks GitHub Releases for updates and shows an in-app banner when a
 
 Edit `hooks/useUpdateChecker.ts` and set:
 
-- `GITHUB_OWNER` to your GitHub username or org (current default: `anshc022`).
-- `GITHUB_REPO` to the repository where you publish releases (current default: `frt-loan`).
+- `GITHUB_OWNER` to your GitHub username or org (current default: `nycanshu`).
+- `GITHUB_REPO` to the repository where you publish releases (current default: `loan`).
 
 > Tip: If you hit GitHub API rate limits, consider a tiny proxy endpoint that calls GitHub with a token and returns `{ latestVersion, downloadUrl }`.
 

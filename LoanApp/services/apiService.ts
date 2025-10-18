@@ -2,7 +2,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authService } from './authService';
 
-const API_BASE_URL = 'https://api-loan-muv1.onrender.com';
+const API_BASE_URL = 'http://192.168.29.112:5000';
 const REQUEST_TIMEOUT_MS = 12000;
 
 export interface Location {
@@ -128,6 +128,40 @@ export interface AgentStats {
   activeLoans: number;
   totalCollected: number;
   pendingCollections: number;
+  todayCollected?: number;
+  todayCollections?: number;
+}
+
+export interface Collection {
+  id: number;
+  loan_id: number;
+  amount: number;
+  payment_method: 'cash' | 'upi';
+  screenshot_filename?: string;
+  collection_date: string;
+  created_at: string;
+  updated_at: string;
+  loan?: Loan;
+}
+
+export interface TodayCollection {
+  id: number;
+  customer_number?: string;
+  amount: number;
+  net_amount: number;
+  total_payable: number;
+  per_day_amount: number;
+  rounded_per_day_amount: number;
+  total_installments: number;
+  payment_start_date?: string;
+  next_collection_date?: string;
+  loan_date: string;
+  status: string;
+  shop_id: number;
+  shop_name?: string;
+  owner_name?: string;
+  Shop?: Shop;
+  todayStatus?: 'pending' | 'collected';
 }
 
 class ApiService {
@@ -383,6 +417,131 @@ class ApiService {
       return response.data.data;
     } catch (error: any) {
       console.error('API Service - Error fetching locations:', error);
+      throw error;
+    }
+  }
+
+  // Collection methods
+  async getTodaysCollections(): Promise<TodayCollection[]> {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/api/collections/today`,
+        this.getAuthHeaders()
+      );
+      return response.data.data || response.data;
+    } catch (error: any) {
+      console.error('API Service - Error fetching today\'s collections:', error);
+      throw error;
+    }
+  }
+
+  async recordCollection(loanId: number, amount: number, paymentMethod: 'cash' | 'upi', screenshotFile?: any): Promise<Collection> {
+    try {
+      const formData = new FormData();
+      formData.append('amount', amount.toString());
+      formData.append('payment_method', paymentMethod);
+      // Ensure backend has a collection_date; default to today (YYYY-MM-DD)
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      formData.append('collection_date', `${yyyy}-${mm}-${dd}`);
+      
+      if (screenshotFile && paymentMethod === 'upi') {
+        // Backend expects field name 'payment_screenshot'
+        formData.append('payment_screenshot', {
+          uri: screenshotFile.uri,
+          type: screenshotFile.type || 'image/jpeg',
+          name: screenshotFile.name || 'screenshot.jpg',
+        } as any);
+      }
+
+      const response = await axios.post(
+        `${API_BASE_URL}/api/collections/loan/${loanId}/record`,
+        formData,
+        {
+          headers: {
+            'Authorization': `Bearer ${authService.getToken()}`,
+            'X-API-KEY': 'your-api-key-here',
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      
+      return response.data.data || response.data;
+    } catch (error: any) {
+      console.error('API Service - Error recording collection:', error);
+      throw error;
+    }
+  }
+
+  async getCollectionHistory(): Promise<any[]> {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/api/collections/my-collections`,
+        this.getAuthHeaders()
+      );
+      // The API returns { collections: [...], summary: {...} }
+      // We need to extract the collections array
+      const data = response.data.data || response.data;
+      return data.collections || data || [];
+    } catch (error: any) {
+      console.error('API Service - Error fetching collection history:', error);
+      throw error;
+    }
+  }
+
+  // Collection Schedule APIs
+  async getTodayCollections(agentId?: number): Promise<any> {
+    try {
+      const url = agentId ? `/api/collection-schedules/today/${agentId}` : '/api/collection-schedules/today';
+      const response = await axios.get(
+        `${API_BASE_URL}${url}`,
+        this.getAuthHeaders()
+      );
+      return response.data.data || response.data;
+    } catch (error: any) {
+      console.error('API Service - Error fetching today collections:', error);
+      throw error;
+    }
+  }
+
+  async recordCollectionSchedule(scheduleId: number, collectionData: any): Promise<any> {
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/api/collection-schedules/record/${scheduleId}`,
+        collectionData,
+        this.getAuthHeaders()
+      );
+      return response.data.data || response.data;
+    } catch (error: any) {
+      console.error('API Service - Error recording collection:', error);
+      throw error;
+    }
+  }
+
+  async getOverdueCollections(): Promise<any> {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/api/collection-schedules/overdue`,
+        this.getAuthHeaders()
+      );
+      return response.data.data || response.data;
+    } catch (error: any) {
+      console.error('API Service - Error fetching overdue collections:', error);
+      throw error;
+    }
+  }
+
+  async getCollectionStats(): Promise<any> {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/api/collection-schedules/stats`,
+        this.getAuthHeaders()
+      );
+      return response.data.data || response.data;
+    } catch (error: any) {
+      console.error('API Service - Error fetching collection stats:', error);
       throw error;
     }
   }

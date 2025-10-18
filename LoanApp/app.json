@@ -7,7 +7,10 @@
     "orientation": "portrait",
     "icon": "./assets/mainlogo.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": false,
+    "packagerOpts": {
+      "nonPersistent": true
+    },
+    "tunnel": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",

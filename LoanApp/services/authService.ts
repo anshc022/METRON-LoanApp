@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
-const API_BASE_URL = 'https://api-loan-muv1.onrender.com';
+const API_BASE_URL = 'http://192.168.29.112:5000';
 const REQUEST_TIMEOUT_MS = 10000; // default request timeout (10s)
 const TOKEN_KEY = 'authToken';
 const USER_KEY = 'userData';

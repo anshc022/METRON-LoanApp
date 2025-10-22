@@ -2,7 +2,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authService } from './authService';
 
-const API_BASE_URL = 'http://192.168.29.112:5000';
+const API_BASE_URL = 'https://api-loan-muv1.onrender.com';
 const REQUEST_TIMEOUT_MS = 12000;
 
 export interface Location {

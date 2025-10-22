@@ -9,6 +9,7 @@ import { authService } from './services/authService';
 import { ToastProvider } from './components/shared/Toast';
 import ErrorBoundary from './components/ErrorBoundary';
 import NetworkStatus from './components/shared/NetworkStatus';
+import { UpdateBanner } from './components/shared/UpdateBanner';
 
 type AppComponentState = 'loading' | 'login' | 'agent' | 'admin';
 
@@ -112,6 +113,7 @@ export default function App() {
         <ToastProvider>
           <View style={styles.container}>
             <NetworkStatus showOnlineMessage={true} />
+            <UpdateBanner />
             {renderContent()}
             <StatusBar style="auto" />
           </View>
